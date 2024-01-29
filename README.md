@@ -1,1 +1,1 @@
-code shall be released.
+The code will be released after the article is accepted.
