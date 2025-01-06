@@ -260,6 +260,7 @@ class MaskedAutoencoderViT(nn.Module):
     def forward(self, imgs, mask_ratio=0.):
         latent, mask, ids_restore = self.forward_encoder(imgs, mask_ratio)
         pred1 = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
+
         pred = self.unpatchify(pred1)
         pred = self.pred_conv(pred)
         return pred, pred1, mask
