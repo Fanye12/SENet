@@ -4,3 +4,5 @@
 **2025.1** our paper has been accepted by IEEE TIP.
 
 **2024.2** [arxiv paper](https://arxiv.org/pdf/2402.18922) released.
+
+you can get the mae weight [here](https://dl.fbaipublicfiles.com/mae/visualize/mae_visualize_vit_base.pth)
