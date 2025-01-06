@@ -4,10 +4,12 @@ import argparse
 from datetime import datetime
 from make_dataset import get_loader
 from UTIls import clip_gradient, AvgMeter, poly_lr
+from LICM import set_LICM
 import torch.nn.functional as F
 import numpy as np
-from net import SENet, interpolate_pos_embed, mae_vit_large_patch16_dec512d8b
+from net import SENet, interpolate_pos_embed
 import torch.nn as nn
+import copy
 torch.manual_seed(2024)
 torch.cuda.manual_seed(2024)
 np.random.seed(2024)
@@ -21,11 +23,13 @@ def get_parser():
     parser.add_argument('--lr', type=float,
                         default=1e-4, help='learning rate')
     parser.add_argument('--batchsize', type=int,
-                        default=32, help='training batch size')
+                        default=8, help='training batch size')
     parser.add_argument('--trainsize', type=int,
                         default=384, help='training img size')
     parser.add_argument('--clip', type=float,
                         default=0.5, help='gradient clipping margin')
+    parser.add_argument('--masking_ratio', type=float,
+                        default=0.05, help='masking ratio')                    
     parser.add_argument('--pretrained_mae_path', type=str,
                         default='pretrained_model/mae_visualize_vit_base.pth')#MAE pretrained weight
     
@@ -36,11 +40,25 @@ def get_parser():
     parser.add_argument('--train_log_path', type=str,
                         default='log/SENet.txt')
     parser.add_argument('--task', type=str,
-                        default='sod')  #'sod'for sod task, 'cod' for cod task
+                        default='cod')  #'sod'for sod task, 'cod' for cod task
     parser.add_argument('--set_LICM', type=bool,
-                        default=False)  #if True, set LICM
+                        default=True)  #if True, set LICM
     opt = parser.parse_args()
     return opt
+
+def patchify(imgs):
+        """
+        imgs: (N, 3, H, W)
+        x: (N, L, patch_size**2 *3)
+        """
+        p = 16
+        assert imgs.shape[2] == imgs.shape[3] and imgs.shape[2] % p == 0
+
+        h = w = imgs.shape[2] // p
+        x = imgs.reshape(shape=(imgs.shape[0], 3, h, p, w, p))
+        x = torch.einsum('nchpwq->nhwpqc', x)
+        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * 3))
+        return x
 
 def structure_loss(pred, mask):
     weit = 1 + 5 * torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
@@ -53,25 +71,19 @@ def structure_loss(pred, mask):
     wiou = 1 - (inter + 1) / (union - inter + 1)
     return (wbce + wiou).mean()
 
-def dynamic_structure_loss1(pred, mask, weight_map):
-   
+def dynamic_structure_loss1(pred, mask):
+    weight_map = copy.deepcopy(mask)
     weit = torch.zeros_like(weight_map)
     for i in range(weight_map.shape[0]):
         tt = weight_map[i]
         a = 384*384 / (tt == 1).sum()
-        # a = 2
-        # num = (tt==1).sum() + (tt==0).sum()
-        # a = num / (384 *384 - num) / 9
+
         tt[(tt != 0) & (tt != 1)] = a    
         tt[tt != a] = 1
-        # print((tt==a).sum()/384/384)
+
         weit[i] = tt
 
-    # a = 192*192*32/(weit == 1).sum() - 0.5
-    # a = 192*192*32*0.8/(weit == 1).sum()
-    # print(a)
-    # weit[(weit != 0) & (weit != 1)] = a
-    # weit[weit != a] = 1
+    
     wbce = F.binary_cross_entropy_with_logits(pred, mask, reduction='mean')
     wbce = (weit * wbce).sum(dim=(2, 3)) / weit.sum(dim=(2, 3))
 
@@ -81,42 +93,37 @@ def dynamic_structure_loss1(pred, mask, weight_map):
     wiou = 1 - (inter + 1) / (union - inter + 1)
     return (wbce + wiou).mean()
 
-def build_model():
-
-    model = mae_vit_base_patch16_dec512d8b()
-    if op
- 
+def recon_loss(imgs, pred, mask):
+    """
+    imgs: [N, 3, H, W]
+    pred: [N, L, p*p*3]
+    mask: [N, L], 0 is keep, 1 is remove, 
+    """
+    target = patchify(imgs)
     
-    #打印出加载进去的layer
-    # state_dict = model.state_dict()
-    # for k, _ in model.named_parameters():
-    #     if k in checkpoint_model and k in state_dict:
-    #         print(f"key {k}")
+    mean = target.mean(dim=-1, keepdim=True)
+    var = target.var(dim=-1, keepdim=True)
+    target = (target - mean) / (var + 1.e-6)**.5
 
+    loss = (pred - target) ** 2
+    loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
+
+    loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
+    # print(loss)
+    return loss
+
+def build_model():
+    model = SENet()
+    #load mae pretrained weight
     checkpoint = torch.load(opt.pretrained_mae_path, map_location='cpu')
     checkpoint_model = checkpoint['model']
-    # for name in checkpoint_model.keys():
-    #     print(name)
-    # print(1)
     interpolate_pos_embed(model, checkpoint_model)
     model.load_state_dict(checkpoint_model, strict=False)
+
+    if opt.set_LICM:
+        set_LICM(model=model)
     
-
-    #更换为监督的vit的encoder
-    # vit_checkpoint = torch.load('/media/lab532/COD_via_MAE/pretrain_model/jx_vit_base_p16_224-80ecf9dd.pth', map_location='cpu')
-    # for name in vit_checkpoint.keys():
-    #     print(name)
-
-    #更换为clip的image encoder
-
-    # vit_checkpoint = torch.load('/media/lab532/LLM_COD/clip_image_encoder_weights_VIT_base_32.pth', map_location='cpu')
-    # for name in vit_checkpoint.keys():
-    #     print(name)
-    
-    # interpolate_pos_embed(model, vit_checkpoint)
-    # model.load_state_dict(vit_checkpoint, strict=False)
-
-    model = nn.DataParallel(model)
+    # model = nn.DataParallel(model)
     model = model.cuda()
     
     for param in model.parameters():
@@ -135,11 +142,13 @@ def train(train_loader, model, optimizer, epoch, loss_fn):
         images = images.cuda()
         gts = gts.cuda()
         # label = label.cuda().long()
-        pred = model(images)
+        pred, pred1, mask = model(images, mask_ratio=opt.masking_ratio)
         # ---- loss function ----
-        # loss1 = nn.CrossEntropyLoss()
-        loss = structure_loss(pred, gts) #+ loss1(classify, label)
         
+        seg_loss = dynamic_structure_loss1(pred, gts) #+ loss1(classify, label)
+        
+        reconstruction_loss = recon_loss(imgs=images, pred=pred1, mask=mask)
+        loss = 0.9 * seg_loss + 0.1 * reconstruction_loss#total loss
         # ---- backward ----
         loss.backward()
         clip_gradient(optimizer, opt.clip)
@@ -169,7 +178,6 @@ if __name__ == '__main__':
     opt = get_parser()
     Loss_fn = structure_loss
     model = build_model()
-    # print(1)
 
     optimizer = torch.optim.Adam(model.parameters(), opt.lr)
 
@@ -180,8 +188,8 @@ if __name__ == '__main__':
         img_root = 'dataset/SOD/TrainDataset-DUTS-TR/Imgs/'
         gt_root = 'dataset/SOD/TrainDataset-DUTS-TR/GT/'
 
-    # train_loader = get_loader(image_root=img_root, gt_root=gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize)
-    train_loader = get_general_loader(batchsize=opt.batchsize, trainsize=opt.trainsize)
+    train_loader = get_loader(image_root=img_root, gt_root=gt_root, batchsize=opt.batchsize, trainsize=opt.trainsize)
+ 
     total_step = len(train_loader)
     print(total_step)
 
