@@ -36,7 +36,7 @@ def get_parser():
     #params that need to be modified          
     
     parser.add_argument('--weight_save_path', type=str,
-                        default='checkpoints/SENet')
+                        default='checkpoints/SENet/')
     parser.add_argument('--train_log_path', type=str,
                         default='log/SENet.txt')
     parser.add_argument('--task', type=str,
@@ -169,8 +169,8 @@ def train(train_loader, model, optimizer, epoch, loss_fn):
     save_path = opt.weight_save_path
     os.makedirs(save_path, exist_ok=True)
     if (epoch + 1) % 5 == 0 or (epoch + 1) == opt.epochs:
-        torch.save(model.state_dict(), save_path + 'mae-%d.pth' % epoch)
-        print('[Saving Snapshot:]', save_path + 'mae-%d.pth' % epoch)
+        torch.save(model.state_dict(), save_path + 'senet-%d.pth' % epoch)
+        print('[Saving Snapshot:]', save_path + 'senet-%d.pth' % epoch)
         file.write('[Saving Snapshot:]' + save_path + 'mae-%d.pth' % epoch + '\n')
         
 if __name__ == '__main__':
