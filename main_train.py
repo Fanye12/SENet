@@ -10,9 +10,6 @@ import numpy as np
 from net import SENet, interpolate_pos_embed
 import torch.nn as nn
 import copy
-torch.manual_seed(2024)
-torch.cuda.manual_seed(2024)
-np.random.seed(2024)
 torch.backends.cudnn.benchmark = True
 
 def get_parser():
