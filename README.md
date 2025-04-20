@@ -12,6 +12,11 @@
 
 you can find them [here](https://github.com/lartpang/awesome-segmentation-saliency-dataset#camouflaged-object-detection-cod).
 
+## Prediction map
+
+you can download [here](https://drive.google.com/drive/folders/1LfSkeirAlctiroPGY6rD99FsWJ0OGRfM?usp=drive_link)
+
+
 ## References
 
 During development, we referred to the following resources:
