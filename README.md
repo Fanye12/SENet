@@ -24,3 +24,16 @@ During development, we referred to the following resources:
 - [MAE](https://github.com/facebookresearch/mae) - The backbone of SENet is built based on this project.
   Note that to get good results, you need to use the full pre-trained weights of MAE (including the decoder part). you can get the mae weight [here](https://dl.fbaipublicfiles.com/mae/visualize/mae_visualize_vit_base.pth).
 - [BGNet](https://github.com/thograce/BGNet) - The training process and implementation are based on this project.
+
+## Citation
+
+if you think our work is helpful, please cite
+
+```bibtex
+@article{hao2025simple,
+  title={A simple yet effective network based on vision transformer for camouflaged object and salient object detection},
+  author={Hao, Chao and Yu, Zitong and Liu, Xin and Xu, Jun and Yue, Huanjing and Yang, Jingyu},
+  journal={IEEE Transactions on Image Processing},
+  year={2025},
+  publisher={IEEE}
+}
