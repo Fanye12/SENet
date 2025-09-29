@@ -5,6 +5,8 @@
 
 **2024.2** [arxiv paper](https://arxiv.org/pdf/2402.18922) released.
 
+Building upon this work, we further proposed JoNet to investigate the joint learning of the two tasks. If you're interested, you can find the paper [here](https://arxiv.org/abs/2508.06063).
+
 
 
 ## Dataset
