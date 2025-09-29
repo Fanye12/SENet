@@ -5,7 +5,8 @@ import torch.nn as nn
 import numpy as np
 import os, argparse
 from make_dataset import test_dataset
-from net import mae_vit_base_patch16_dec512d8b, mae_vit_large_patch16_dec512d8b
+# from net import mae_vit_base_patch16_dec512d8b, mae_vit_large_patch16_dec512d8b
+from net import SENet, interpolate_pos_embed
 from LICM import set_LICM
 
 
@@ -14,7 +15,8 @@ parser.add_argument('--testsize', type=int, default=384, help='testing size')
 parser.add_argument('--checkpoint_path', type=str, default='/media/lab532/MAE_COD_SOD/checkpoints/JT_SOD2000/mae-24.pth')  #改这里
 opt = parser.parse_args()
 
-model = mae_vit_base_patch16_dec512d8b()
+# model = mae_vit_base_patch16_dec512d8b()
+model = SENet()
 # set_LICM(model=model)
 model = model.cuda()
 model = nn.DataParallel(model)
