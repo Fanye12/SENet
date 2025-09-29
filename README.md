@@ -1,7 +1,7 @@
 ![image](https://github.com/user-attachments/assets/1b17264b-ebf6-41bc-99ef-3a415f5c636e)
 # News
 
-**2025.1** our paper has been accepted by IEEE TIP.
+**2025.1** our paper has been accepted by IEEE TIP [link](https://ieeexplore.ieee.org/abstract/document/10844040?casa_token=0ULEW0Oah-sAAAAA:GLtYjOlE2D-SKq-Uct3uXeXPVTUn6zTK1fT8vw_dHyX6q8s0E0p8bKPElJrtWxUXy5thkxcnsLYyAQ).
 
 **2024.2** [arxiv paper](https://arxiv.org/pdf/2402.18922) released.
 
@@ -14,7 +14,7 @@ you can find them [here](https://github.com/lartpang/awesome-segmentation-salien
 
 ## Prediction map
 
-you can download [here](https://drive.google.com/drive/folders/1LfSkeirAlctiroPGY6rD99FsWJ0OGRfM?usp=drive_link)
+you can download [here](https://drive.google.com/drive/folders/1LfSkeirAlctiroPGY6rD99FsWJ0OGRfM?usp=drive_link).
 
 
 ## References
